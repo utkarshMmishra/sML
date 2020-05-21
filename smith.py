@@ -3,6 +3,7 @@ import speech_recognition as sr
 import pyautogui
 import webbrowser
 import re
+import smtplib
 import random
 import pyttsx3
 import datetime
@@ -70,7 +71,15 @@ def wishMe():
     else:
         speak_text_cmd("Good Evening!") 
 
-    speak_text_cmd("I am Smith Sir. Please tell me how may I help you")  
+    speak_text_cmd("I am Smith Sir. Please tell me how may I help you")
+
+def sendEmail(to, content):
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.login('youremail@gmail.com', 'your-password')
+    server.sendmail('youremail@gmail.com', to, content)
+    server.close()  
 
 if __name__ == '__main__':
     wishMe()
@@ -130,6 +139,17 @@ if __name__ == '__main__':
             speak_text_cmd('here is the information about' + topic)
             print('Done!')
             continue
+
+        elif 'send a email' in query:
+            try:
+                speak("What should I say?")
+                content = takeCommand()
+                to = "YourEmail@gmail.com"   
+                sendEmail(to, content)
+                speak("Email has been sent!")
+            except Exception as e:
+                print(e)
+                speak("Sorry Sir. I am not able to send this email")  
 
         elif 'bye' in voice_note:
             speak_text_cmd('have a nice day sir')
