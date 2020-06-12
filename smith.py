@@ -8,6 +8,7 @@ import random
 import pyttsx3
 import datetime
 import os
+from pygame import mixer
 
 speech = sr.Recognizer()
 try:
@@ -47,8 +48,9 @@ def read_voice_cmd():
             print("Say something")
             speech.pause_threshold = 1
             audio= speech.listen(source)
-
+        print("Recognizing")
         voice_text = speech.recognize_google(audio)
+        print("Recognized")
     except sr.UnknownValueError:
         speak_text_cmd('i cannot understand sir')
         print('i cannot understand sir')
@@ -73,12 +75,29 @@ def wishMe():
 
     speak_text_cmd("I am Smith Sir. Please tell me how may I help you")
 
+def find(name, path):
+    for root, files in os.walk(path):
+        if name in files:
+            return os.path.join(root, name)
+
+def tellAjoke():
+    res=requests.get('https://icanhazdadjoke.com',headers={"Accept":"application/json"})
+    if res.status_code == 200:
+        speak_text_cmd("Okay.Heres's one")
+        speak_text_cmd(str(res.json()['joke']))
+    else:
+        speak_text_cmd("Oh, I ran out of joke")
+
 def sendEmail(to, content):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
-    server.login('youremail@gmail.com', 'your-password')
-    server.sendmail('youremail@gmail.com', to, content)
+    speak_text_cmd("What is your email ?")
+    your = takeCommand()
+    speak_text_cmd("What is your password ?")
+    yourPass=takeCommand()
+    server.login(your, yourPass)
+    server.sendmail(your, to, content)
     server.close()  
 
 if __name__ == '__main__':
@@ -104,6 +123,10 @@ if __name__ == '__main__':
             print(songs)   
             os.startfile(os.path.join(music_dir, songs[0]))
             continue
+
+        elif 'stop music' in voice_note or 'stop song' in voice_note:
+            mixer.music.stop()
+            speak_text_cmd("The music is stopped")
 
         elif 'the time' in voice_note:
             strTime = datetime.datetime.now().strftime("%H:%M:%S")   
@@ -140,16 +163,34 @@ if __name__ == '__main__':
             print('Done!')
             continue
 
-        elif 'send a email' in query:
+        elif 'find file' in voice_note:
+            speak_text_cmd("What is the name of the file that I should search ?")
+            fileName = takeCommand()
+            speak_text_cmd("What is the extension of the file ?")
+            extension = takeCommand()
+            extension = extension.lower()
+            fullname = str(fileName)+'.'+str(extension)
+            print(fullname)
+            path = 'C:\\'
+            location = find(fullname.path)
+            speak_text_cmd('File is found at the location')
+            print(location)
+            continue
+
+        elif 'tell a joke' in voice_note or 'joke' in voice_note:
+            tellAjoke()
+
+        elif 'send a email' in voice_note:
             try:
-                speak("What should I say?")
+                speak_text_cmd("What should I say?")
                 content = takeCommand()
-                to = "YourEmail@gmail.com"   
+                speak_text_cmd("To whom shall I send the mail ?")
+                to = takeCommand()  
                 sendEmail(to, content)
                 speak("Email has been sent!")
             except Exception as e:
                 print(e)
-                speak("Sorry Sir. I am not able to send this email")  
+                speak_text_cmd("Sorry Sir. I am not able to send this email")  
 
         elif 'bye' in voice_note:
             speak_text_cmd('have a nice day sir')
